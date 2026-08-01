@@ -85,6 +85,9 @@ export type Database = {
     Functions: {
       search_candidates: {
         Args: {
+          p_cursor_created_at?: string
+          p_cursor_id?: string
+          p_cursor_score?: number
           p_from_date?: string
           p_limit?: number
           p_name?: string

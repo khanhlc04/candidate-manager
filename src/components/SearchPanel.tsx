@@ -9,7 +9,7 @@ const inputClass =
 
 export function SearchPanel() {
   const [filters, setFilters] = useState<SearchFilters>(EMPTY_FILTERS)
-  const { rows, loading, error } = useCandidateSearch(filters)
+  const { rows, loading, hasMore, error, loadMore } = useCandidateSearch(filters)
 
   const patch = (next: Partial<SearchFilters>) => setFilters((prev) => ({ ...prev, ...next }))
 
@@ -121,9 +121,20 @@ export function SearchPanel() {
         ))}
       </ol>
 
-      <p className="mt-2 text-xs text-slate-400">
-        {loading ? 'Đang tìm…' : `${rows.length} kết quả`}
-      </p>
+      {/* Phân trang cursor: chỉ đi tiếp, không nhảy tới trang bất kỳ — đúng loại
+          giao diện "Tải thêm" nên đánh đổi đó không phải hạn chế. */}
+      <div className="mt-3 flex items-center justify-between gap-3">
+        <p className="text-xs text-slate-400">
+          {loading ? 'Đang tìm…' : `Đang hiển thị ${rows.length} kết quả`}
+          {!loading && !hasMore && rows.length > 0 && ' · đã hết'}
+        </p>
+        {hasMore && rows.length > 0 && (
+          <button onClick={loadMore} disabled={loading}
+                  className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:opacity-60">
+            {loading ? 'Đang tải…' : 'Tải thêm'}
+          </button>
+        )}
+      </div>
     </section>
   )
 }
