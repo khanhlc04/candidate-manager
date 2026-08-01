@@ -1,16 +1,30 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useCandidates } from '../hooks/useCandidates'
+import { useRealtimeCandidates } from '../hooks/useRealtimeCandidates'
 import { CandidateForm } from '../components/CandidateForm'
 import { CandidateTable } from '../components/CandidateTable'
+import { RealtimeIndicator } from '../components/RealtimeIndicator'
 import { Alert } from '../components/Alert'
 import { Spinner } from '../components/Spinner'
 
 export default function DashboardPage() {
   const { user } = useAuth()
-  const { candidates, loading, error, createCandidate, updateStatus, deleteCandidate } =
-    useCandidates(user?.id)
+  const {
+    candidates, loading, error,
+    createCandidate, updateStatus, deleteCandidate,
+    upsertLocal, removeLocal,
+  } = useCandidates(user?.id)
   const [pageError, setPageError] = useState<string | null>(null)
+
+  // Đăng ký nhận thay đổi realtime.
+  // upsertLocal / removeLocal đều được bọc useCallback ở useCandidates
+  // nên tham chiếu ổn định → effect không subscribe lại mỗi lần render.
+  const realtimeStatus = useRealtimeCandidates({
+    userId: user?.id,
+    onUpsert: upsertLocal,
+    onRemove: removeLocal,
+  })
 
   return (
     <div className="space-y-6">
@@ -18,7 +32,10 @@ export default function DashboardPage() {
 
       <section className="space-y-3">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-base font-semibold text-slate-900">Danh sách ứng viên</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-base font-semibold text-slate-900">Danh sách ứng viên</h2>
+            <RealtimeIndicator status={realtimeStatus} />
+          </div>
           <span className="text-sm text-slate-500">{candidates.length} hồ sơ</span>
         </div>
 
