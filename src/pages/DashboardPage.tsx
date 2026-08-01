@@ -7,6 +7,7 @@ import { BulkUploadPanel } from '../components/BulkUploadPanel'
 import { CandidateForm } from '../components/CandidateForm'
 import { CandidateTable } from '../components/CandidateTable'
 import { JobMatchPanel } from '../components/JobMatchPanel'
+import { RecommendPanel } from '../components/RecommendPanel'
 import { SearchPanel } from '../components/SearchPanel'
 import { RealtimeIndicator } from '../components/RealtimeIndicator'
 import { Alert } from '../components/Alert'
@@ -39,6 +40,7 @@ export default function DashboardPage() {
       <CandidateForm onSubmit={createCandidate} />
       <BulkUploadPanel onSubmit={createManyCandidates} />
       <JobMatchPanel candidates={candidates} />
+      <RecommendPanel />
       <SearchPanel />
 
       <section className="space-y-3">
