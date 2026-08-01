@@ -17,9 +17,15 @@ export function CandidateTable({ candidates, onUpdateStatus, onDelete, onError }
    * Bucket là private nên không có URL cố định — phải xin signed URL lúc bấm.
    * Mở tab TRƯỚC khi await: nhiều trình duyệt chặn window.open gọi sau await
    * vì đã mất "user gesture".
+   *
+   * KHÔNG truyền 'noopener' vào windowFeatures: theo chuẩn HTML, khi có noopener
+   * thì window.open trả về null — ta sẽ mất tham chiếu tới tab vừa mở và vô tình
+   * điều hướng chính tab hiện tại sang file PDF. Thay vào đó mở tab bình thường
+   * rồi tự cắt liên kết bằng tab.opener = null (cùng tác dụng bảo mật).
    */
   async function openResume(path: string) {
-    const tab = window.open('', '_blank', 'noopener,noreferrer')
+    const tab = window.open('', '_blank')
+    if (tab) tab.opener = null
     try {
       const url = await getResumeSignedUrl(path, 60)
       if (tab) tab.location.href = url
