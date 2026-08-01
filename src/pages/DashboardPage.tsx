@@ -6,6 +6,7 @@ import { AnalyticsPanel } from '../components/AnalyticsPanel'
 import { BulkUploadPanel } from '../components/BulkUploadPanel'
 import { CandidateForm } from '../components/CandidateForm'
 import { CandidateTable } from '../components/CandidateTable'
+import { JobMatchPanel } from '../components/JobMatchPanel'
 import { SearchPanel } from '../components/SearchPanel'
 import { RealtimeIndicator } from '../components/RealtimeIndicator'
 import { Alert } from '../components/Alert'
@@ -37,6 +38,7 @@ export default function DashboardPage() {
       <AnalyticsPanel refreshKey={candidates.length} />
       <CandidateForm onSubmit={createCandidate} />
       <BulkUploadPanel onSubmit={createManyCandidates} />
+      <JobMatchPanel candidates={candidates} />
       <SearchPanel />
 
       <section className="space-y-3">
