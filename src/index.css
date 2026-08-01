@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+/* Tuỳ biến theme theo cách của Tailwind v4 — không cần tailwind.config.js */
+@theme {
+  --color-brand-50:  #eef6ff;
+  --color-brand-500: #2563eb;
+  --color-brand-600: #1d4ed8;
+  --color-brand-700: #1e40af;
+}
+
+/* Vài style nền cho toàn app */
+body {
+  @apply bg-slate-50 text-slate-900 antialiased;
+}
