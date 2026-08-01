@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useCandidates } from '../hooks/useCandidates'
 import { useRealtimeCandidates } from '../hooks/useRealtimeCandidates'
+import { AnalyticsPanel } from '../components/AnalyticsPanel'
 import { CandidateForm } from '../components/CandidateForm'
 import { CandidateTable } from '../components/CandidateTable'
 import { SearchPanel } from '../components/SearchPanel'
@@ -29,6 +30,9 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* candidates.length đổi mỗi khi thêm/xoá hồ sơ (kể cả qua Realtime)
+          → thống kê tự tải lại, luôn khớp với bảng bên dưới. */}
+      <AnalyticsPanel refreshKey={candidates.length} />
       <CandidateForm onSubmit={createCandidate} />
       <SearchPanel />
 

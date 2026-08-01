@@ -423,3 +423,9 @@ entrypoint = "./functions/create-candidate/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/create-candidate/*.html" ]
+
+[functions.analytics]
+enabled = true
+verify_jwt = true   # mode auth:'user' cần JWT hợp lệ — đây cũng là mặc định
+import_map = "./functions/analytics/deno.json"
+entrypoint = "./functions/analytics/index.ts"
