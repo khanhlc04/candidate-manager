@@ -85,7 +85,8 @@ supabase/
 │   ├── 20260801084844_storage_resumes.sql       bucket private + policy theo thư mục user
 │   ├── 20260801103339_search_and_ranking.sql    tsvector + pg_trgm + search_candidates  ← ý #1
 │   ├── 20260801105832_search_prefix_match.sql   thêm cửa khớp tiền tố cho từ khoá gõ dở ← ý #1
-│   └── 20260801110433_keyset_pagination.sql     phân trang cursor trên total ordering   ← ý #4
+│   ├── 20260801110433_keyset_pagination.sql     phân trang cursor trên total ordering   ← ý #4
+│   └── 20260801194820_search_unaccent.sql       bỏ dấu hai phía: "Nguyen" ra "Nguyễn"   ← ý #1
 └── functions/
     ├── _shared/
     │   ├── validation.ts      kiểm tra dữ liệu tạo hồ sơ
@@ -290,10 +291,22 @@ Từ khoá vào được kết quả qua **ba cửa**, vì mỗi cửa có đi�
 3. **Khớp tiền tố** (`ilike 'abc%'`, neo trái nên vẫn dùng được index GIN) — cho từ khoá gõ dở
    chừng, thứ mà cả FTS lẫn trigram đều trượt
 
+Cả ba cửa đều chạy trên dạng **đã bỏ dấu**, vì cả ba đều phân biệt dấu mà bàn phím mặc định của
+người dùng thì thường không gõ dấu. Extension `unaccent` chuẩn hoá **cả hai phía** — dữ liệu (khi
+trigger dựng `search_vector`) lẫn từ khoá (khi vào truy vấn) — nên phép so sánh vẫn đối xứng: gõ
+có dấu hay không dấu đều ra cùng kết quả.
+
+`unaccent()` được Postgres đánh dấu `STABLE`, mà index biểu thức thì bắt buộc `IMMUTABLE`, nên có
+một hàm bọc `f_unaccent()` khai báo `IMMUTABLE` có chủ ý (gọi dạng 2 tham số với tên từ điển ghi
+rõ schema, nên kết quả không còn phụ thuộc `search_path`). Hai index trigram GIN chuyển sang đặt
+trên `f_unaccent(full_name)` / `f_unaccent(applied_position)` để planner vẫn dùng được — đã xác
+nhận bằng `explain`: `Bitmap Index Scan on candidates_full_name_unaccent_trgm_idx`.
+
 Điểm liên quan: `0.5 × ts_rank + 0.3 × similarity + 0.2 × khớp tiền tố`, làm tròn 6 chữ số.
 
 Kết quả thực tế: `"frontend"` → 3 hồ sơ đúng, xếp theo điểm; `"Frontened"` (gõ sai) → vẫn ra
-đủ 3 hồ sơ đó; `"Nguy"` (gõ dở) → ra `Nguyễn Văn An`.
+đủ 3 hồ sơ đó; `"Nguy"` (gõ dở) → ra `Nguyễn Văn An`; `"Nguyen"` (không dấu) → ra `Nguyễn Văn An`;
+`"Do"` → ra `Đỗ Quốc Bảo`, `Đỗ Quang Huy`, `đỗ việt hoàng`; `"Le Thi"` → ra `Lê Thị Thống Kê`.
 
 ### Ý #4 — Phân trang cursor
 
@@ -384,6 +397,8 @@ xoá cũng đồng bộ; `INSERT` chạy thẳng trong SQL cũng hiện ngay tr�
 | Cập nhật trạng thái / xoá gọi thẳng Data API | Đề chỉ bắt buộc Edge Function cho thao tác *thêm*; gọi thẳng cũng cho thấy RLS đang bảo vệ |
 | Trigger thay cho generated column ở `search_vector` | `array_to_string` là `STABLE`, không dùng được cho generated column |
 | Cấu hình FTS `'simple'` thay vì `'english'` | Stemming tiếng Anh làm hỏng tên tiếng Việt |
+| Bọc `unaccent()` thành `f_unaccent()` `IMMUTABLE` | Bản gốc là `STABLE` nên không dùng được trong index biểu thức; đổi lại phải `REINDEX` + nạp lại `search_vector` nếu nâng cấp Postgres major có đổi `unaccent.rules` |
+| Bỏ dấu cả ô lọc tên/vị trí, không chỉ ô từ khoá | Nếu chỉ một ô bỏ dấu thì cùng chuỗi `Nguyen` cho hai kết quả khác nhau tuỳ gõ vào ô nào — bẫy khó hiểu hơn là không hỗ trợ hẳn |
 | Tính thống kê trong Edge Function thay vì `GROUP BY` | Đề yêu cầu rõ là Edge Function; có `MAX_ROWS` + cờ `truncated` để minh bạch giới hạn |
 | Bao phủ bất đối xứng thay vì Jaccard | Jaccard phạt oan ứng viên nhiều kỹ năng (xem ý #5) |
 | Keyset thay vì `OFFSET` | Realtime bật ⇒ dữ liệu trôi giữa hai lần lật trang |
@@ -395,8 +410,6 @@ xoá cũng đồng bộ; `INSERT` chạy thẳng trong SQL cũng hiện ngay tr�
   lớn hơn nên chuyển sang hàm SQL tổng hợp phía database; hiện đã có cờ `truncated` để không im lặng.
 - Chưa có test tự động trong repo. Toàn bộ kiểm chứng nêu trong README được chạy thủ công qua
   SQL, `curl` và trình duyệt.
-- Khớp tiền tố phân biệt dấu: gõ `Nguyen` không ra `Nguyễn`. Sửa được bằng extension `unaccent`,
-  cố ý để ngoài phạm vi.
 - Xác nhận email đang tắt (xem bảng trên).
 - Supabase Advisors còn 2 cảnh báo mức **WARN** (không có ERROR): `public.rls_auto_enable()` là hàm
   `SECURITY DEFINER` **do nền tảng Supabase tạo sẵn**, không thuộc repo này (nó trả về `event_trigger`
