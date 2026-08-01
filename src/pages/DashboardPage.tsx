@@ -4,6 +4,7 @@ import { useCandidates } from '../hooks/useCandidates'
 import { useRealtimeCandidates } from '../hooks/useRealtimeCandidates'
 import { CandidateForm } from '../components/CandidateForm'
 import { CandidateTable } from '../components/CandidateTable'
+import { SearchPanel } from '../components/SearchPanel'
 import { RealtimeIndicator } from '../components/RealtimeIndicator'
 import { Alert } from '../components/Alert'
 import { Spinner } from '../components/Spinner'
@@ -29,6 +30,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <CandidateForm onSubmit={createCandidate} />
+      <SearchPanel />
 
       <section className="space-y-3">
         <div className="flex items-baseline justify-between">

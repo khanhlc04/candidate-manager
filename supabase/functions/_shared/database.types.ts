@@ -46,6 +46,7 @@ export type Database = {
           full_name: string
           id: string
           resume_url: string | null
+          search_vector: unknown
           skills: string[]
           status: string
           updated_at: string
@@ -57,6 +58,7 @@ export type Database = {
           full_name: string
           id?: string
           resume_url?: string | null
+          search_vector?: unknown
           skills?: string[]
           status?: string
           updated_at?: string
@@ -68,6 +70,7 @@ export type Database = {
           full_name?: string
           id?: string
           resume_url?: string | null
+          search_vector?: unknown
           skills?: string[]
           status?: string
           updated_at?: string
@@ -80,7 +83,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      search_candidates: {
+        Args: {
+          p_from_date?: string
+          p_limit?: number
+          p_name?: string
+          p_position?: string
+          p_query?: string
+          p_statuses?: string[]
+          p_to_date?: string
+        }
+        Returns: {
+          applied_position: string
+          created_at: string
+          full_name: string
+          id: string
+          resume_url: string
+          score: number
+          skills: string[]
+          status: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
