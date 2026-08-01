@@ -2,7 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { FunctionsHttpError } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { removeResume, uploadResume } from '../lib/storage'
+import { runWithConcurrency, withRetry, type SettledResult } from '../lib/concurrency'
 import type { Candidate, CandidateStatus } from '../types/candidate'
+
+export const UPLOAD_CONCURRENCY = 3   // giới hạn N file cùng lúc
+
+export interface BulkProgress { done: number; total: number }
 
 export interface NewCandidateInput {
   full_name: string
@@ -124,6 +129,31 @@ export function useCandidates(userId: string | undefined) {
     [userId, upsertLocal],
   )
 
+  // ------------------------------------------------------- thêm hàng loạt (ý #3)
+  /**
+   * Thêm nhiều hồ sơ cùng lúc, upload tối đa UPLOAD_CONCURRENCY file song song.
+   * Một hồ sơ hỏng không làm hỏng cả lô — trả về kết quả từng phần.
+   */
+  const createManyCandidates = useCallback(
+    async (
+      inputs: NewCandidateInput[],
+      onProgress?: (p: BulkProgress) => void,
+    ): Promise<SettledResult<Candidate>[]> => {
+      if (!userId) throw new Error('Chưa đăng nhập.')
+
+      return runWithConcurrency(
+        inputs,
+        // Mỗi "việc" = upload file + gọi Edge Function, có thử lại 1 lần nếu lỗi.
+        (input) => withRetry(() => createCandidate(input), { retries: 1 }),
+        {
+          limit: UPLOAD_CONCURRENCY,
+          onProgress: (done, total) => onProgress?.({ done, total }),
+        },
+      )
+    },
+    [userId, createCandidate],
+  )
+
   // ------------------------------------------------------------ đổi trạng thái
   /** Optimistic update: đổi UI ngay, hỏng thì trả về giá trị cũ. */
   const updateStatus = useCallback(
@@ -180,6 +210,7 @@ export function useCandidates(userId: string | undefined) {
     error,
     refresh,
     createCandidate,
+    createManyCandidates,   // ý #3 — thêm hàng loạt
     updateStatus,
     deleteCandidate,
     upsertLocal,   // bước 7 (Realtime) dùng

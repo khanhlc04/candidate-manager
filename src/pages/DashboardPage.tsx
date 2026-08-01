@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useCandidates } from '../hooks/useCandidates'
 import { useRealtimeCandidates } from '../hooks/useRealtimeCandidates'
 import { AnalyticsPanel } from '../components/AnalyticsPanel'
+import { BulkUploadPanel } from '../components/BulkUploadPanel'
 import { CandidateForm } from '../components/CandidateForm'
 import { CandidateTable } from '../components/CandidateTable'
 import { SearchPanel } from '../components/SearchPanel'
@@ -14,7 +15,8 @@ export default function DashboardPage() {
   const { user } = useAuth()
   const {
     candidates, loading, error,
-    createCandidate, updateStatus, deleteCandidate,
+    createCandidate, createManyCandidates,
+    updateStatus, deleteCandidate,
     upsertLocal, removeLocal,
   } = useCandidates(user?.id)
   const [pageError, setPageError] = useState<string | null>(null)
@@ -34,6 +36,7 @@ export default function DashboardPage() {
           → thống kê tự tải lại, luôn khớp với bảng bên dưới. */}
       <AnalyticsPanel refreshKey={candidates.length} />
       <CandidateForm onSubmit={createCandidate} />
+      <BulkUploadPanel onSubmit={createManyCandidates} />
       <SearchPanel />
 
       <section className="space-y-3">
