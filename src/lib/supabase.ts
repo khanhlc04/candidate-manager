@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import type { Database } from '../types/database.types'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -17,7 +18,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
  * Chỉ tạo MỘT instance duy nhất: mỗi instance mở một kết nối Realtime riêng và
  * quản lý một bộ token riêng — tạo nhiều lần sẽ gây rò rỉ WebSocket và session lệch nhau.
  */
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,      // lưu session vào localStorage → F5 không bị đăng xuất
     autoRefreshToken: true,    // tự gia hạn access_token trước khi hết hạn (~1 giờ)
