@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+dist-ssr/
+
+# Environment 
+.env
+.env.local
+.env.*.local
+supabase/functions/.env
+
+# Supabase local
+supabase/.branches
+supabase/.temp
+
+# Editor / OS
+.DS_Store
+.vscode/*
+!.vscode/settings.json
+*.log
